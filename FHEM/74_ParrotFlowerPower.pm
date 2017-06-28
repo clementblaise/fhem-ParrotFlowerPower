@@ -283,7 +283,6 @@ sub ParrotFlowerPower_callGatttool($$) {
     my $calibSoilMoisture   = "";
     my $calibAirTemperature = "";
     my $calibSunlight       = "";
-    my $fertilizer          = "";
 
 
     # wait up to 60s to get a free slot
@@ -335,14 +334,11 @@ sub ParrotFlowerPower_callGatttool($$) {
         
         $calibSunlight = ParrotFlowerPower_round( ParrotFlowerPower_convertSunlight( ParrotFlowerPower_convertStringToFloat( ParrotFlowerPower_readSensorValue( $name, $mac, "39e1fa0b-84a8-11e2-afba-0002a5d5c51b" ) ) ), $decimalPlaces );
         Log3 $name, 4, "Sub ParrotFlowerPower_callGatttool ($name) - processing gatttool response. calibSunlight: $calibSunlight";
-        
-        $fertilizer = ParrotFlowerPower_round( ParrotFlowerPower_convertFertilizer( ParrotFlowerPower_convertStringToFloat( ParrotFlowerPower_readSensorValue( $name, $mac, "39e1fa0b-84a8-11e2-afba-0002a5d5c51b" ) ) ), $decimalPlaces );
-        Log3 $name, 4, "Sub ParrotFlowerPower_callGatttool ($name) - processing gatttool response. fertilizer: $fertilizer";
     } else {
         Log3 $name, 4, "Sub ParrotFlowerPower_callGatttool ($name) - no free slot found to start gatttool";
     }
     
-    return "$deviceName|$deviceColor|$batteryLevel|$calibSoilMoisture|$calibAirTemperature|$calibSunlight|$fertilizer";
+    return "$deviceName|$deviceColor|$batteryLevel|$calibSoilMoisture|$calibAirTemperature|$calibSunlight";
 }
 
 sub ParrotFlowerPower_readSensorValue($$$) {
@@ -450,7 +446,7 @@ sub ParrotFlowerPower_convertSunlight($) {
     }
 }
 
-sub ParrotFlowerPower_convertFertilizer($) {
+sub ParrotFlowerPower_convertSoilMoisture($) {
     $_ = shift;
     
     if ( "" ne $_ ) {
@@ -463,7 +459,7 @@ sub ParrotFlowerPower_convertFertilizer($) {
 
 sub ParrotFlowerPower_BlockingDone($) {
     my ($string)            = @_;
-    my ( $name, $deviceName, $deviceColor, $batteryLevel, $calibSoilMoisture, $calibAirTemperature, $calibSunlight, $fertilizer ) = split( "\\|", $string );
+    my ( $name, $deviceName, $deviceColor, $batteryLevel, $calibSoilMoisture, $calibAirTemperature, $calibSunlight ) = split( "\\|", $string );
     my $hash                = $defs{$name};
     my $minSoilMoisture     = AttrVal( $name, "minSoilMoisture", 0 );
     my $maxSoilMoisture     = AttrVal( $name, "maxSoilMoisture", 100 );
@@ -479,8 +475,7 @@ sub ParrotFlowerPower_BlockingDone($) {
     return if ( $hash->{helper}{DISABLED} );
 
     if ( ("" ne $deviceName) && ("" ne $deviceColor) && ("" ne $batteryLevel) &&
-         ("" ne $calibSoilMoisture) && ("" ne $calibAirTemperature) && ("" ne $calibSunlight) &&
-         ("" ne $fertilizer) )
+         ("" ne $calibSoilMoisture) && ("" ne $calibAirTemperature) && ("" ne $calibSunlight) )
     {
         readingsBeginUpdate( $hash );
 
@@ -491,8 +486,7 @@ sub ParrotFlowerPower_BlockingDone($) {
         readingsBulkUpdate( $hash, "soilMoisture", $calibSoilMoisture );
         readingsBulkUpdate( $hash, "airTemperature", $calibAirTemperature );
         readingsBulkUpdate( $hash, "sunlight", $calibSunlight );
-        readingsBulkUpdate( $hash, "fertilizer", $fertilizer );
-        
+                
         if ( $calibSoilMoisture < $minSoilMoisture ) {
             readingsBulkUpdate( $hash, "stateSoilMoisture", "low" );
         }
